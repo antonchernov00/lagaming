@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L.A.Gaming — Проверка знаний</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+  (function(){
+    var originalWarn = console.warn;
+    console.warn = function() {
+      if (arguments[0] && String(arguments[0]).indexOf('in-browser Babel') !== -1) return;
+      originalWarn.apply(console, arguments);
+    };
+  })();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root{ --navy:#16233F; --coral:#E0592E; --pink:#D63469; --cream:#FFF3EC; --ink:#1C1C1C; --paper:#FFFCFA; --line:#E7DFD6; --muted:#7A7268; --ok:#2E7D4F; --bad:#C4383F; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  .display{ font-family: Georgia, "Times New Roman", serif; font-weight:700; letter-spacing:-0.01em; }
+  .shell{max-width:700px; margin:0 auto; padding:0 20px 80px;}
+  .topbar{ background:var(--navy); color:#fff; padding:24px 20px 28px; border-bottom:5px solid var(--coral); }
+  .topbar-inner{max-width:700px; margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .brand-dot{width:10px;height:10px;border-radius:50%;background:var(--coral);}
+  .brand-name{font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:#C9D0DE;}
+  .h1{font-size:26px; line-height:1.15; margin:0 0 6px;}
+  .sub{color:#B9C2D4; font-size:14.5px; margin:0;}
+  .meter-row{display:flex; align-items:center; gap:14px; margin-top:18px;}
+  .meter-track{flex:1; height:8px; background:rgba(255,255,255,0.14); border-radius:99px; overflow:hidden;}
+  .meter-fill{height:100%; background:linear-gradient(90deg, var(--coral), var(--pink)); border-radius:99px; transition:width .3s ease;}
+  .meter-label{font-size:13px; color:#C9D0DE; white-space:nowrap;}
+  .card{background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; margin-top:18px;}
+  .eyebrow{font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--coral); font-weight:700; margin:0 0 8px;}
+  .sec-title{font-size:22px; margin:0 0 12px; color:var(--navy);}
+  .body-text{font-size:15.5px; line-height:1.6; color:#3A3530; margin:0 0 14px;}
+  .name-input{width:100%; padding:15px 16px; font-size:16px; border:1.5px solid var(--line); border-radius:10px; font-family:inherit; margin-top:16px;}
+  .name-input:focus{outline:none; border-color:var(--coral);}
+  .btn{display:block; width:100%; background:var(--coral); color:#fff; border:none; border-radius:10px; padding:14px 22px; font-size:15.5px; font-weight:700; cursor:pointer; margin-top:20px; font-family:inherit; text-align:center;}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-navy{background:var(--navy);}
+  .q-block{margin-bottom:24px; padding-bottom:22px; border-bottom:1px solid var(--line);}
+  .q-block:last-child{border-bottom:none;}
+  .q-num{font-size:12px; color:var(--muted); font-weight:700; margin-bottom:4px;}
+  .q-text{font-size:15.5px; font-weight:600; margin:0 0 12px; color:var(--navy); line-height:1.4;}
+  .opt{display:block; width:100%; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:12px 15px; margin-bottom:7px; cursor:pointer; font-size:14.5px; font-family:inherit; color:var(--ink); transition:all .12s ease;}
+  .opt:hover{border-color:var(--coral);}
+  .opt.selected{border-color:var(--coral); background:var(--cream); font-weight:600;}
+  .progress-fixed{position:sticky; top:0; background:var(--paper); padding:12px 0; z-index:10; border-bottom:1px solid var(--line); margin-bottom:8px;}
+  .score-hero{text-align:center; padding:34px 20px;}
+  .score-num{font-size:38px; font-weight:800; color:var(--navy);}
+  .score-den{font-size:14px; color:var(--muted);}
+  .badge{display:inline-block; background:var(--navy); color:#fff; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; padding:6px 14px; border-radius:99px; margin-bottom:14px; font-weight:700;}
+  .badge.fail{background:var(--bad);}
+  .fail-msg{background:#FCEBEC; border:1.5px solid var(--bad); border-radius:10px; padding:18px; margin-top:16px; font-size:15.5px; color:#7A1D22; line-height:1.5;}
+  .foot-note{font-size:13px; color:var(--muted); text-align:center; margin-top:26px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const QUESTIONS = [
+  { sec:"Добро пожаловать", q:"Как мы формулируем то, чем занимаемся?", options:["Сдаём в аренду компьютеры", "Даём место, где можно почувствовать себя своим", "Продаём игровое время дешевле конкурентов"], correct:1 },
+  { sec:"Добро пожаловать", q:"Сколько у нас ценностей?", options:["3", "5", "7"], correct:2 },
+  { sec:"Наши точки", q:"Сколько ПК на точке Мира?", options:["27", "30", "44"], correct:0 },
+  { sec:"Наши точки", q:"На какой точке пакеты 4/6 часов действуют дольше всего?", options:["Ленина", "Мира", "50 лет ВЛКСМ"], correct:2 },
+  { sec:"Наши точки", q:"На какой точке есть кальян?", options:["Мира", "Ленина", "50 лет ВЛКСМ"], correct:1 },
+  { sec:"Наши точки", q:"Почему администратор изучает все три точки, даже если работает на одной?", options:["Просто общее развитие", "На случай подмены смены на другой точке", "Это не нужно, можно не учить"], correct:1 },
+  { sec:"Характеристики ПК", q:"На какой видеокарте работает Duo на Мира?", options:["RTX 4060", "RTX 5070 Ti", "RTX 3060 Ti"], correct:1 },
+  { sec:"Характеристики ПК", q:"В какую из этих игр НЕ стоит уверенно сажать гостя на Comfort/Bootcamp 50 лет ВЛКСМ?", options:["CS2", "Dota 2", "Escape from Tarkov"], correct:2 },
+  { sec:"Квалификация", q:"С какого возраста рассматривают кандидатов в администраторы?", options:["16 лет", "18 лет", "20 лет"], correct:1 },
+  { sec:"Стажировка", q:"Сколько смен минимум новичок работает рядом с наставником?", options:["1 смена", "2–3 смены", "10 смен"], correct:1 },
+  { sec:"Иерархия", q:"Кто управляющий конкретно на точке 50 лет ВЛКСМ?", options:["Андранник", "Антон лично", "Эмма"], correct:1 },
+  { sec:"Оплата труда", q:"Сколько составляет гарантированная ставка за смену?", options:["1 000 ₽", "1 500 ₽", "2 000 ₽"], correct:1 },
+  { sec:"Оплата труда", q:"Какой процент от продаж бара идёт администратору?", options:["5%", "10%", "15%"], correct:1 },
+  { sec:"Мотивация", q:"Снижение премии за невыход без предупреждения?", options:["1 000 ₽", "5 000 ₽", "Увольнение сразу"], correct:1 },
+  { sec:"Мотивация", q:"Что происходит со сменой, проведённой не по чек-листу?", options:["Штраф 500 ₽", "Смена аннулируется", "Ничего, если гостей мало"], correct:1 },
+  { sec:"Мотивация", q:"Снижение премии за пропуск собрания?", options:["500 ₽", "1 000 ₽", "5 000 ₽"], correct:1 },
+  { sec:"График смен", q:"За сколько минут нужно приходить до начала смены?", options:["Ровно вовремя", "15–20 минут заранее", "За час"], correct:1 },
+  { sec:"График смен", q:"Кто составляет график смен?", options:["Управляющий единолично", "Администраторы совместно на ген. уборке", "Владелец"], correct:1 },
+  { sec:"Форс-мажор", q:"Через сколько часов без связи это считается форс-мажором?", options:["1 час", "2,5 часа", "6 часов"], correct:1 },
+  { sec:"Приём смены", q:"Кто заполняет чек-лист приёмки смены?", options:["Только принимающий", "Оба администратора вместе", "Управляющий"], correct:1 },
+  { sec:"Приём смены", q:"Где посмотреть эталон готового рабочего места?", options:["В основной инструкции текстом", "В видео в Telegram-канале точки", "Спросить у любого гостя"], correct:1 },
+  { sec:"Мотивация", q:"Снижение премии, если рабочее место не соответствует видео-эталону?", options:["Не наказывается, это мелочь", "500 ₽", "Увольнение"], correct:1 },
+  { sec:"Работа с бронью", q:"На каких точках бронь дублируется в отдельный чат «Бронь»?", options:["На всех трёх", "Только на Ленина и Мира", "Только на 50 лет ВЛКСМ"], correct:1 },
+  { sec:"Уборка", q:"Что происходит, если после генеральной уборки места не прошли проверку по стандарту?", options:["Ничего страшного", "Штрафуется вся присутствовавшая команда", "Штрафуется только старший администратор"], correct:1 },
+  { sec:"Обязанности в смену", q:"Где именно моются полы на точке Мира?", options:["Только в комнате Duo и туалете", "Нигде, там ковролин везде", "Во всех залах ежедневно"], correct:0 },
+  { sec:"Обязанности в смену", q:"До какого часа дневной администратор моет полы?", options:["До 10:00", "До 11:00", "До 12:00"], correct:1 },
+  { sec:"Обязанности в смену", q:"Куда отправляется фотоотчёт об уборке?", options:["Никуда, на словах управляющему", "В группу", "Только если попросят"], correct:1 },
+  { sec:"Работа с бронью", q:"За сколько минут до времени брони нужно перезвонить гостю?", options:["10 минут", "30 минут", "60 минут"], correct:1 },
+  { sec:"Работа с бронью", q:"Бронь подтверждена по звонку, но гостя нет спустя 15 минут после начала. Что делать?", options:["Ждать ещё час", "Всё равно аннулировать бронь", "Ничего, бронь же подтверждена"], correct:1 },
+  { sec:"Уборка", q:"Чем нельзя протирать монитор?", options:["Специальным раствором", "Влажными салфетками", "Сухой тряпкой"], correct:1 },
+  { sec:"Уборка", q:"Сколько времени даётся на уборку места после ухода гостя?", options:["5 минут", "15 минут", "30 минут"], correct:1 },
+  { sec:"Уборка", q:"Как часто проводится генеральная уборка?", options:["Раз в месяц", "Раз в неделю", "Раз в квартал"], correct:1 },
+  { sec:"Уборка", q:"Снижение премии за пропуск генеральной уборки без причины?", options:["1 000 ₽", "2 000 ₽", "5 000 ₽"], correct:0 },
+  { sec:"Уборка", q:"Кто подписывает документ переписи оборудования?", options:["Только присутствующие на этой уборке", "Все администраторы точки", "Только управляющий"], correct:1 },
+  { sec:"Уборка", q:"Какой кухонный прибор нужно чистить от накипи на генеральной уборке?", options:["Аэрогриль", "Чайник", "Микроволновку"], correct:1 },
+  { sec:"Еда", q:"При какой температуре и сколько минут разогревается еда в аэрогриле?", options:["100°, 15 минут", "150°, 7 минут", "200°, 3 минуты"], correct:1 },
+  { sec:"Касса", q:"Когда нужно фиксировать расхождение в кассе?", options:["В конце месяца", "Сразу, как обнаружено", "Можно передать следующей смене"], correct:1 },
+  { sec:"Приём товара", q:"Можно ли сразу продавать только что принятый товар?", options:["Да, сразу", "Нет, только после подтверждения от управляющего", "Да, если накладная в порядке"], correct:1 },
+  { sec:"Инвентаризация", q:"Как часто проводится инвентаризация на 50 лет ВЛКСМ?", options:["Раз в месяц", "Каждое воскресенье", "Раз в квартал"], correct:1 },
+  { sec:"Инвентаризация", q:"При какой сумме недостачи проводится служебное расследование?", options:["От 1 000 ₽", "От 10 000 ₽", "От 50 000 ₽"], correct:1 },
+  { sec:"Техподдержка", q:"Что происходит с ПК при завершении сессии гостя?", options:["Ничего не меняется", "Сброс на образ, временные изменения слетают", "ПК выключается"], correct:1 },
+  { sec:"Тех. навыки", q:"Что делать при проблемах с FaceIt-античитом?", options:["Переустановить самостоятельно", "Перезапустить клиент, если не помогло — техподдержка", "Игнорировать, само пройдёт"], correct:1 },
+  { sec:"Рабочие чаты", q:"В каком чате публикуются фото накладных на 50 лет ВЛКСМ?", options:["Основной рабочий", "Документы", "Штрафы"], correct:1 },
+  { sec:"Рабочие чаты", q:"Есть ли отдельный чат «Штрафы» на точке 50 лет ВЛКСМ?", options:["Да", "Нет", "Только по запросу"], correct:1 },
+  { sec:"Философия", q:"На чём держится бизнес по нашей философии?", options:["На разовых гостях", "На постоянных гостях", "На рекламе"], correct:1 },
+  { sec:"Философия", q:"Когда лучше объяснять правила гостю?", options:["После нарушения", "Заранее", "Не объяснять вообще"], correct:1 },
+  { sec:"Общение с гостями", q:"Как обращаться к гостям по умолчанию?", options:["На «ты»", "На «Вы»", "Как удобнее"], correct:1 },
+  { sec:"Общение с гостями", q:"Сколько бонусов даётся гостю за отзыв?", options:["10–20", "50–100", "500"], correct:1 },
+  { sec:"Знакомство гостя", q:"Через сколько минут после начала сессии стоит проверить нового гостя?", options:["5–10 минут", "Час", "Не нужно"], correct:0 },
+  { sec:"Знакомство гостя", q:"С какого варианта тарифа лучше начинать предложение гостю?", options:["С самого дешёвого", "С более дорогого и интересного", "Не имеет значения"], correct:1 },
+  { sec:"Возраст", q:"С какого возраста можно находиться в клубе ночью?", options:["С 14 лет", "С 16 лет", "С 18 лет"], correct:2 },
+  { sec:"Возраст", q:"Несовершеннолетнему отказали в ночной посадке. Что с деньгами за бронь?", options:["Сгорают", "Возвращаются на баланс", "Забираются в кассу"], correct:1 },
+  { sec:"Бонусы", q:"Сколько бонусов начисляется с покупки в баре?", options:["10%", "50%", "100%"], correct:1 },
+  { sec:"Бонусы", q:"Максимальная доля пакета 4–6 часов, которую можно оплатить бонусами?", options:["До 10%", "До 20%", "До 50%"], correct:1 },
+  { sec:"Чаевые", q:"Делятся ли чаевые со сменой?", options:["Да, пополам", "Нет, личные деньги администратора", "Да, но только 10%"], correct:1 },
+  { sec:"Полномочия", q:"Может ли администратор сам решить дать скидку гостю?", options:["Да, до 500 ₽", "Нет, всегда через управляющего", "Да, без ограничений"], correct:1 },
+  { sec:"Полномочия", q:"Сколько устных предупреждений даётся перед завершением сессии нарушителя?", options:["1", "3", "10"], correct:1 },
+  { sec:"Полномочия", q:"Кто принимает решение о внесении гостя в чёрный список?", options:["Любой администратор", "Только управляющий", "Старший администратор"], correct:1 },
+  { sec:"Права", q:"Может ли администратор отказаться от заведомо незаконного распоряжения?", options:["Нет, любое распоряжение нужно выполнять", "Да, это его право", "Только если распоряжение письменное"], correct:1 },
+  { sec:"Права", q:"Что администратору гарантировано перед самостоятельной работой?", options:["Ничего, сразу на смену", "Обучение и поддержка наставника", "Только устные советы коллег"], correct:1 },
+  { sec:"Запреты", q:"Можно ли сажать гостя за ПК под своим личным аккаунтом администратора?", options:["Да, если гость попросит", "Нет, запрещено", "Да, если постоянный гость"], correct:1 },
+  { sec:"Запреты", q:"Что грозит за воровство на смене?", options:["Устное предупреждение", "Увольнение без сохранения выплат", "Штраф 500 ₽"], correct:1 },
+  { sec:"Конфиденциальность", q:"Можно ли рассказывать друзьям, сколько зарабатывает клуб?", options:["Да, это не секрет", "Нет, это коммерческая тайна", "Можно без точных цифр"], correct:1 },
+  { sec:"Внешний вид", q:"Что допустимо девушкам вместо брюк?", options:["Шорты", "Юбки", "Ничего, только брюки"], correct:1 },
+];
+
+function sanitizeKey(name) { return name.trim().toLowerCase().replace(/[\s\/\\'"]+/g, "-").slice(0, 60); }
+
+function Landing({ name, setName, onStart }) {
+  return (
+    <div className="shell">
+      <div className="card">
+        <p className="eyebrow">Проверка знаний</p>
+        <h2 className="sec-title display">{QUESTIONS.length} вопросов по всей должностной инструкции</h2>
+        <p className="body-text">Перед этим стоит внимательно прочитать инструкцию целиком — здесь только проверка, без материала для изучения.</p>
+        <p className="body-text">Вопросы построены на конкретных деталях, а не на общих представлениях о сервисе — угадать интуитивно сложно, если инструкцию не читал по-настоящему. Порог прохождения — 80%.</p>
+        <input className="name-input" placeholder="Как тебя зовут?" value={name} onChange={e => setName(e.target.value)} />
+        <button className="btn" disabled={!name.trim()} onClick={onStart}>Начать проверку</button>
+      </div>
+    </div>
+  );
+}
+
+function TestView({ name, onFinish }) {
+  const [answers, setAnswers] = useState({});
+  const select = (qi, oi) => setAnswers(prev => ({ ...prev, [qi]: oi }));
+  const allAnswered = Object.keys(answers).length === QUESTIONS.length;
+  const answeredCount = Object.keys(answers).length;
+
+  return (
+    <div className="shell">
+      <div className="progress-fixed">
+        <div className="meter-row" style={{marginTop:0}}>
+          <div className="meter-track"><div className="meter-fill" style={{width: (answeredCount/QUESTIONS.length*100) + "%"}}></div></div>
+          <div className="meter-label" style={{color:"var(--navy)"}}>{answeredCount}/{QUESTIONS.length}</div>
+        </div>
+      </div>
+      <div className="card">
+        {QUESTIONS.map((item, qi) => (
+          <div className="q-block" key={qi}>
+            <div className="q-num">{item.sec.toUpperCase()} · ВОПРОС {qi+1}</div>
+            <p className="q-text">{item.q}</p>
+            {item.options.map((opt, oi) => (
+              <button key={oi} className={"opt" + (answers[qi] === oi ? " selected" : "")} onClick={() => select(qi, oi)}>{opt}</button>
+            ))}
+          </div>
+        ))}
+        <button className="btn" disabled={!allAnswered} onClick={() => onFinish(answers)}>Сдать проверку</button>
+      </div>
+    </div>
+  );
+}
+
+function ResultsView({ answers, name, onRestart }) {
+  const total = QUESTIONS.length;
+  const correct = QUESTIONS.filter((q, qi) => answers[qi] === q.correct).length;
+  const score = correct / total;
+  const passed = score >= 0.8;
+  const today = new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+
+  return (
+    <div className="shell">
+      <div className="card score-hero">
+        <span className={"badge" + (passed ? "" : " fail")}>{passed ? "Пройдено" : "Не пройдено"}</span>
+        <div className="score-num">{correct}/{total}</div>
+        <div className="score-den">{Math.round(score*100)}% правильных ответов, порог — 80%</div>
+      </div>
+      {passed ? (
+        <div className="card" style={{border:"2px solid var(--ok)", background:"#F5FBF7"}}>
+          <p className="eyebrow" style={{color:"var(--ok)"}}>Покажи этот экран управляющему</p>
+          <h2 className="sec-title display">Подтверждение прохождения</h2>
+          <div style={{fontSize:15.5, marginBottom:10}}><strong>Сотрудник:</strong> {name}</div>
+          <div style={{fontSize:15.5, marginBottom:10}}><strong>Дата:</strong> {today}</div>
+          <div style={{fontSize:15.5}}><strong>Результат:</strong> {correct}/{total} ({Math.round(score*100)}%)</div>
+          <p className="body-text" style={{marginTop:16}}>Сфотографируй этот экран и отправь управляющему.</p>
+        </div>
+      ) : (
+        <div className="card">
+          <div className="fail-msg">
+            Результат ниже порога в 80%. Прежде чем пробовать снова — изучи должностную инструкцию заново, целиком, а не только те места, где сомневался. Открой сайт с инструкцией (файл «instrukciya_sayt.html», если он рядом с этим) и пройди по всем разделам ещё раз.
+          </div>
+          <button className="btn btn-navy" onClick={onRestart}>Пройти проверку заново</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [view, setView] = useState("landing");
+  const [name, setName] = useState("");
+  const [finalAnswers, setFinalAnswers] = useState({});
+
+  return (
+    <>
+      <div className="topbar">
+        <div className="topbar-inner">
+          <div className="brand"><div className="brand-dot"></div><div className="brand-name">L.A.Gaming</div></div>
+          <h1 className="h1 display">Проверка знаний</h1>
+          <p className="sub">{name ? `Сдаёт: ${name}` : "Допуск к стажировке"}</p>
+        </div>
+      </div>
+      {view === "landing" && <Landing name={name} setName={setName} onStart={() => setView("test")} />}
+      {view === "test" && <TestView name={name} onFinish={(a) => { setFinalAnswers(a); setView("results"); }} />}
+      {view === "results" && <ResultsView answers={finalAnswers} name={name} onRestart={() => { setFinalAnswers({}); setView("test"); }} />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
